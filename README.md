@@ -1,138 +1,151 @@
 # PathForge ⚡ — AI Learning Path Recommendation System
-
-> A personalized course recommendation engine for interns, built with Hybrid Collaborative Filtering and a full-stack deployable web interface.
-
+ 
+> A personalized course recommendation engine for interns, powered by **SVD Matrix Factorization** and a full-stack web interface with real-time analytics.
+ 
+![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
+![Flask](https://img.shields.io/badge/Flask-REST%20API-black?style=flat-square&logo=flask)
+![scikit-surprise](https://img.shields.io/badge/scikit--surprise-SVD-orange?style=flat-square)
+![Plotly](https://img.shields.io/badge/Plotly.js-Charts-3F4F75?style=flat-square&logo=plotly)
+![NDCG](https://img.shields.io/badge/NDCG%403-87.24%25-brightgreen?style=flat-square)
+ 
 ---
-
-## 📌 About the Project
-
-PathForge recommends personalized learning paths for interns based on their department, skill levels, and engagement. It uses a **Hybrid Scoring Engine** that combines department affinity, skill gap analysis, and engagement to rank the most relevant courses for each intern.
-
-Built as part of an ML internship task at **Internee.pk**.
-
+ 
+## 📌 What is PathForge?
+ 
+PathForge recommends the **top 3 personalized learning courses** for each intern based on their department, skill levels, and engagement score. It uses a trained **SVD (Singular Value Decomposition) Matrix Factorization** model — the same family of algorithms behind Netflix-style recommendation systems — trained on over 7,000 intern-course interactions.
+ 
+The system handles two types of users:
+- **Known Interns** (`INT_1000`–`INT_1999`): Gets predictions directly from the SVD model using learned latent factors.
+- **New / Custom Interns**: Falls back to a skill-gap + department affinity scoring formula so anyone can still get a meaningful recommendation.
+Built as part of an ML internship project at **Internee.pk**.
+ 
 ---
-
-## 🧠 How the Algorithm Works
-
+ 
+## 🧠 How It Works
+ 
+PathForge uses **Collaborative Filtering via SVD**, implemented with `scikit-surprise`. The model decomposes an intern-course interaction matrix into latent factors that capture hidden patterns — which types of interns tend to benefit from which courses — and uses those factors to score unseen courses for each intern.
+ 
 ```
-Score = 0.6 × dept_affinity + 0.3 × gap_bonus + 0.1 × engagement_modifier
-
-gap_bonus           = 1 - |skill_value - 5.5| / 5.5
-engagement_modifier = (engagement_score - 5) × 0.02
+Interaction Matrix ≈ U × Σ × Vᵀ
+ 
+U  = intern latent factors   (1000 interns × 50 factors)
+Vᵀ = course latent factors   (50 factors × 20 courses)
 ```
-
-The model is evaluated using **NDCG@3** (Normalized Discounted Cumulative Gain):
-
-| Model | NDCG@3 |
+ 
+For interns not in the training set, a rule-based fallback scores courses using department relevance, skill gaps, and engagement:
+ 
+```
+Score = 0.5 × dept_affinity + 0.4 × gap_bonus + 0.1 × (engagement / 10)
+gap_bonus = (10 - skill_value) / 9.0   ← low skill = higher priority
+```
+ 
+The Flask backend loads the pre-trained `.pkl` model at startup and serves predictions via a REST API. The frontend calls this API, renders the results, and falls back gracefully if the backend is offline.
+ 
+### 📈 Model Performance
+ 
+| Metric | Value |
 |---|---|
-| Baseline (Popularity) | 26.22% |
-| PathForge (Hybrid) | **84.32%** |
-| Lift | **+58.10%** |
-
+| NDCG@3 — SVD Model | **87.24%** |
+| NDCG@3 — Baseline (Popularity) | 26.22% |
+| Lift over Baseline | **+61.01%** |
+| RMSE | 1.3648 |
+| MAE | 1.2056 |
+| Training Interactions | 7,055 |
+| Latent Factors | 50 |
+| Training Epochs | 30 |
+ 
 ---
-
-## 📁 Folder Structure
-
-```
-PathForge/
-├── frontend/
-│   ├── index.html        ← Page structure
-│   ├── style.css         ← Styling & theme
-│   └── app.js            ← Logic, charts, scoring
-│
-├── backend/
-│   ├── app.py            ← Flask REST API
-│   └── requirements.txt  ← Python dependencies
-│
-├── data/
-│   ├── intern_learning_path_dataset_v2.xlsx
-│   ├── intern_dataset.csv
-│   ├── feature_summary.csv
-│   └── ml_design_notes.csv
-│
-├── notebook/
-│   └── Learning_Path_Recommendation_System.ipynb
-│
-└── README.md
-```
-
+ 
+## ✨ Features
+ 
+### 🎯 Recommend Page
+- Load any known Intern ID to auto-populate their real skill profile from the dataset
+- Manually configure skills via 5 sliders (Python, Math/Stats, SQL, ML Knowledge, Cloud/Infra), department, and engagement score
+- Live **Skill Radar Chart** — updates in real time as you drag the sliders
+- Top 3 course recommendations with scores, icons, and SVD tags
+- **Learning Timeline** — week-by-week progression plan estimated from the model's top picks
+- 🎲 Randomize Profile button for quick exploration
+- Backend status indicator (🟢 SVD Active / 🔴 Offline)
+### 📊 Analytics Page
+Six interactive Plotly.js charts, all powered live by the Flask backend:
+- SVD vs. Baseline model comparison (NDCG@3 bar chart)
+- Top 10 most recommended courses
+- Skill score distributions (mean + std per skill)
+- Department × Course heatmap
+- Monthly engagement trend across the intern cohort
+- Department distribution pie chart
+### ℹ️ About Page
+- Visual breakdown of the SVD decomposition formula
+- All model hyperparameters and evaluation metrics at a glance
+- Full tech stack reference
+### 🌌 UI & Design
+- Animated particle network canvas background
+- Neon lime / electric cyan / hot pink on deep-violet dark theme
+- Fully responsive and mobile-friendly
+- Syne + DM Sans typography (Google Fonts)
 ---
-
+ 
+## 🛠️ Tech Stack
+ 
+| Layer | Technology | Purpose |
+|---|---|---|
+| Backend | Python 3.8+, Flask | REST API serving predictions and analytics |
+| ML Model | scikit-surprise (SVD) | Collaborative filtering on intern-course interactions |
+| Data | Pandas, NumPy, openpyxl | Dataset loading, processing, and feature scoring |
+| Production | Gunicorn | WSGI server for deployment |
+| Frontend | HTML5, CSS3, Vanilla JS | Single-page app with three tabs |
+| Charts | Plotly.js 2.35 | All interactive analytics visualizations |
+| Fonts | Syne, DM Sans | Typography via Google Fonts |
+ 
+---
+ 
+## 📊 Dataset
+ 
+- **1,000 intern profiles** across 10 departments with 27 features each — skill scores, learning style, engagement, completed courses, and ground-truth recommendations
+- **20 curated courses** spanning Data Science, Engineering, Cloud, Security, Analytics, and more
+- **7,055 training interactions** used to fit the SVD model
+- Synthetic dataset generated for internship task purposes
+**Departments:** Data Science · Software Engineering · Cloud & DevOps · Cybersecurity · Data Engineering · Business Analytics · Machine Learning · Frontend · Research · Product
+ 
+---
+ 
 ## 🚀 Getting Started
-
+ 
 ### Option A — Frontend Only (no setup needed)
-Just open `frontend/index.html` in your browser. The app runs in demo mode — the full scoring engine is built into the JavaScript.
-
-### Option B — Full Stack
-
-**1. Install dependencies and start the backend:**
+ 
+Open `frontend/index.html` in your browser. The app runs in demo mode with JS-based scoring — no Python or backend required.
+ 
+### Option B — Full Stack (SVD model active)
+ 
 ```bash
+# Install dependencies and start the backend
 cd backend
 pip install -r requirements.txt
 python app.py
+# Backend runs at http://127.0.0.1:8080
 ```
-Backend runs at `http://localhost:5000`
-
-**2. Open the frontend:**
-Open `frontend/index.html` in your browser.
-
-**3. Connect frontend to backend:**
-In `frontend/app.js`, update line 2:
-```js
-const DEMO_MODE = false;
-```
-
+ 
+Then open `frontend/index.html`. The app auto-detects the backend and switches to live SVD predictions.
+ 
 ---
-
+ 
 ## 🌐 Deployment
-
+ 
 **Backend** — Deploy to [Render](https://render.com) or [Railway](https://railway.app):
 ```bash
 gunicorn app:app --bind 0.0.0.0:$PORT
 ```
-
-**Frontend** — Deploy to [Netlify](https://netlify.com) or [Vercel](https://vercel.com):
-Drag and drop the `frontend/` folder.
-
-After deploying the backend, update `API_BASE` in `app.js` to your live backend URL.
-
+ 
+**Frontend** — Drag the `frontend/` folder to [Netlify](https://netlify.com) or connect via Git on [Vercel](https://vercel.com). Then update `API_BASE` in `app.js` to your live backend URL.
+ 
 ---
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | Python, Flask, Flask-CORS |
-| ML / Data | NumPy, Pandas |
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Charts | Plotly.js 2.35 |
-| Fonts | Syne, DM Sans (Google Fonts) |
-| Production Server | Gunicorn |
-
+ 
+## 📓 Notebook
+ 
+`notebook/Learning_Path_Recommendation_System.ipynb` contains the full ML pipeline — data exploration, interaction matrix construction, SVD training with `scikit-surprise`, NDCG@3 evaluation against the popularity baseline, and model export to `model/svd_model.pkl`.
+ 
 ---
-
-## 📊 Dataset
-
-- **1000 intern profiles** across 10 departments
-- **27 features** per intern including skill scores, learning style, engagement, completed courses, and ground-truth recommendations
-- **20 curated courses** across Data Science, Engineering, Cloud, Security, and more
-- Source: Synthetic dataset generated for internship task purposes
-
----
-
-## ✨ Features
-
-- 🎯 Real-time personalized course recommendations
-- 📡 Live radar chart updating as you adjust skill sliders
-- 📊 6 analytics charts — model comparison, course popularity, skill distributions, dept heatmap, engagement trend, formula breakdown
-- 🗺️ Learning timeline with week-by-week progression estimate
-- 🎲 Randomize profile button for exploration
-- 🌌 Animated particle network background
-- 📱 Fully responsive design
-
----
-
+ 
 ## 👩‍💻 Author
-
-**Jamiha**  
-Internee.pk — ML Engineering Internship
+ 
+**Jamiha** — ML Engineering Internship ·
