@@ -9,7 +9,14 @@
 ![NDCG](https://img.shields.io/badge/NDCG%403-87.24%25-brightgreen?style=flat-square)
  
 ---
- 
+
+
+ <img width="1600" height="755" alt="image" src="https://github.com/user-attachments/assets/89547aa0-a637-4552-b9f3-85de29545ada" />
+<img width="1600" height="772" alt="image" src="https://github.com/user-attachments/assets/2857e134-2ee6-4a3d-bc2b-ebdbe6162e43" />
+<img width="1600" height="764" alt="image" src="https://github.com/user-attachments/assets/3e7841f7-e202-461f-8684-264aa0ccccb3" />
+<img width="1600" height="770" alt="image" src="https://github.com/user-attachments/assets/7f9a1fbf-8d90-4a37-81af-0f0f6b72add9" />
+<img width="1600" height="770" alt="image" src="https://github.com/user-attachments/assets/b7116adf-33f3-4446-b941-329c1e7f801f" />
+
 ## 📌 What is PathForge?
  
 PathForge recommends the **top 3 personalized learning courses** for each intern based on their department, skill levels, and engagement score. It uses a trained **SVD (Singular Value Decomposition) Matrix Factorization** model — the same family of algorithms behind Netflix-style recommendation systems — trained on over 7,000 intern-course interactions.
