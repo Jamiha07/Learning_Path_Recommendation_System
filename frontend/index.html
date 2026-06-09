@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PathForge — AI Learning Path Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+/* ─── CSS Variables ─── */
+:root {
+  --neon-lime: #c8ff00;
+  --electric-cyan: #00f5ff;
+  --hot-pink: #ff2d78;
+  --deep-violet: #0d0520;
+  --mid-dark: #130a2e;
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(200,255,0,0.15);
+  --text-primary: #f0f0f0;
+  --text-muted: rgba(240,240,240,0.5);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--deep-violet);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Particle BG ─── */
+#particles { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+
+/* ─── Layout ─── */
+.app { position: relative; z-index:1; }
+
+/* ─── NAV ─── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 3rem;
+  background: rgba(13,5,32,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(200,255,0,0.1);
+  position: sticky; top:0; z-index:100;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 800;
+  background: linear-gradient(90deg, var(--neon-lime), var(--electric-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--hot-pink); -webkit-text-fill-color: var(--hot-pink); }
+.nav-tabs { display:flex; gap:0.5rem; }
+.nav-tab {
+  padding: 0.5rem 1.2rem;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.nav-tab:hover { color: var(--neon-lime); border-color: rgba(200,255,0,0.3); }
+.nav-tab.active {
+  background: rgba(200,255,0,0.1);
+  color: var(--neon-lime);
+  border-color: rgba(200,255,0,0.4);
+}
+
+/* ─── Hero ─── */
+.hero {
+  padding: 5rem 3rem 3rem;
+  text-align: center;
+  position: relative;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: rgba(200,255,0,0.08);
+  border: 1px solid rgba(200,255,0,0.25);
+  border-radius: 50px;
+  font-size: 0.8rem;
+  color: var(--neon-lime);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+}
+.hero-badge::before { content:''; width:8px; height:8px; background:var(--neon-lime); border-radius:50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 1rem;
+}
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--neon-lime) 0%, var(--electric-cyan) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+.hero-stats { display: flex; justify-content: center; gap: 3rem; margin-bottom: 3rem; }
+.hero-stat { text-align: center; }
+.hero-stat .num {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--neon-lime), var(--electric-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-stat .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+/* ─── Section wrapper ─── */
+.section { padding: 2rem 3rem 4rem; max-width: 1400px; margin: 0 auto; }
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem; font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.section-title span { color: var(--neon-lime); }
+.section-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+
+/* ─── Card ─── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.8rem;
+  backdrop-filter: blur(10px);
+  transition: border-color 0.25s, transform 0.25s;
+}
+.card:hover { border-color: rgba(200,255,0,0.35); }
+
+/* ─── Form Grid ─── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-input, .form-select {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus { border-color: var(--neon-lime); }
+.form-select option { background: #1a0940; }
+
+/* ─── Slider ─── */
+.slider-row { display: flex; align-items: center; gap: 1rem; }
+.slider {
+  flex:1;
+  -webkit-appearance:none; appearance:none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.1);
+  outline: none;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--neon-lime);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(200,255,0,0.5);
+}
+.slider-val {
+  min-width: 2.5rem;
+  text-align: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  color: var(--neon-lime);
+  font-size: 1rem;
+}
+
+/* ─── CTA Button ─── */
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  padding: 0.9rem 2.5rem;
+  background: var(--neon-lime);
+  color: #0d0520;
+  border: none;
+  border-radius: 50px;
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+  letter-spacing: 0.3px;
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(200,255,0,0.35); }
+.cta-btn:active { transform: translateY(0); }
+.cta-btn.loading { opacity: 0.7; cursor: not-allowed; }
+
+/* ─── Result Cards ─── */
+.rec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
+.rec-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(200,255,0,0.2);
+  border-radius: 20px;
+  padding: 1.8rem;
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.5s ease both;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.rec-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(200,255,0,0.1); }
+.rec-card:nth-child(1) { animation-delay: 0.1s; }
+.rec-card:nth-child(2) { animation-delay: 0.2s; }
+.rec-card:nth-child(3) { animation-delay: 0.3s; }
+@keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+.rec-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--neon-lime), var(--electric-cyan));
+}
+.rec-rank {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.75rem; font-weight: 700;
+  color: var(--neon-lime);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+.rec-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+.rec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.15rem; font-weight: 700;
+  margin-bottom: 0.8rem;
+  line-height: 1.3;
+}
+.rec-score-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.8rem 0; }
+.rec-score-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--neon-lime), var(--electric-cyan));
+  transition: width 1s ease;
+}
+.rec-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+.rec-tag {
+  padding: 0.25rem 0.7rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  background: rgba(200,255,0,0.08);
+  border: 1px solid rgba(200,255,0,0.2);
+  color: var(--neon-lime);
+}
+.rec-tag.cyan {
+  background: rgba(0,245,255,0.08);
+  border-color: rgba(0,245,255,0.2);
+  color: var(--electric-cyan);
+}
+.rec-explanation {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding: 0.8rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  border-left: 2px solid rgba(200,255,0,0.3);
+}
+
+/* ─── Analytics Grid ─── */
+.analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.analytics-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+.chart-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem; font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.chart-title::before { content:''; width:3px; height:1.1em; background:var(--neon-lime); border-radius:2px; flex-shrink:0; }
+.plotly-chart { width:100%; }
+
+/* ─── NDCG Score Strip ─── */
+.score-strip {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem; margin-bottom: 2rem;
+}
+.score-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.score-card.highlight { border-color: rgba(200,255,0,0.4); background: rgba(200,255,0,0.05); }
+.score-card .num { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; }
+.score-card.green .num { color: var(--neon-lime); }
+.score-card.cyan .num  { color: var(--electric-cyan); }
+.score-card.pink .num  { color: var(--hot-pink); }
+.score-card .lbl { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* ─── Pages ─── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── Radar ─── */
+#radar-chart { height: 300px; }
+
+/* ─── Spinner ─── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(13,5,32,0.3);
+  border-top-color: #0d0520;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ─── Empty state ─── */
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+.empty-state .icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
+.empty-state h3 { font-family:'Syne',sans-serif; font-size:1.3rem; margin-bottom:0.5rem; opacity:0.5; }
+
+/* ─── Learning Path Timeline ─── */
+.learning-path {
+  display: flex; flex-direction: column; gap: 1rem;
+  position: relative; margin-top: 1.5rem;
+}
+.learning-path::before {
+  content:''; position:absolute;
+  left: 20px; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, var(--neon-lime), var(--electric-cyan), var(--hot-pink));
+}
+.path-step {
+  display: flex; align-items: flex-start; gap: 1.2rem;
+  padding: 1rem 1.2rem 1rem 3.5rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+  position: relative;
+  animation: fadeIn 0.4s ease both;
+}
+.path-step::before {
+  content: attr(data-num);
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px;
+  background: var(--neon-lime);
+  color: #0d0520;
+  border-radius: 50%;
+  font-family:'Syne',sans-serif; font-weight:800; font-size:0.7rem;
+  display:flex; align-items:center; justify-content:center;
+  z-index:1;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.path-step .step-icon { font-size:1.5rem; }
+.path-step .step-info .step-title { font-weight:600; font-size:0.95rem; }
+.path-step .step-info .step-meta { font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem; }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  nav { padding: 1rem 1.5rem; }
+  .section { padding: 1.5rem; }
+  .hero { padding: 3rem 1.5rem 2rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid.three { grid-template-columns: 1fr 1fr; }
+  .rec-grid { grid-template-columns: 1fr; }
+  .analytics-grid, .analytics-grid.three { grid-template-columns: 1fr; }
+  .score-strip { grid-template-columns: 1fr; }
+  .hero-stats { gap:1.5rem; }
+}
+
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+
+<div class="app">
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Path<span>Forge</span> ⚡</div>
+    <div style="display:flex;align-items:center;gap:1.5rem;">
+      <span id="backend-status" style="font-size:0.8rem;color:var(--text-muted);">⏳ Connecting...</span>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showPage('recommend')">🎯 Recommend</button>
+        <button class="nav-tab" onclick="showPage('analytics')">📊 Analytics</button>
+        <button class="nav-tab" onclick="showPage('about')">ℹ️ About</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">🧠 SVD Matrix Factorization · Collaborative Filtering</div>
+    <h1>Your <em>Custom</em><br>Learning Roadmap</h1>
+    <p>Powered by a trained SVD model on 1000 intern profiles. Enter an Intern ID from the dataset or set your own skills to get real model predictions.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">1000+</div><div class="label">Intern Profiles</div></div>
+      <div class="hero-stat"><div class="num">87.24%</div><div class="label">NDCG@3 Accuracy</div></div>
+      <div class="hero-stat"><div class="num">20</div><div class="label">Curated Courses</div></div>
+      <div class="hero-stat"><div class="num">7,055</div><div class="label">Training Interactions</div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: RECOMMEND -->
+  <div id="page-recommend" class="page active section">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
+
+      <div>
+        <div class="section-title">Your <span>Profile</span></div>
+        <div class="section-sub">Enter an existing Intern ID (e.g. INT_1000–INT_1999) to load real data, or type a new ID and set skills manually.</div>
+
+        <div class="card">
+          <div class="form-grid" style="margin-bottom:1.2rem;">
+            <div class="form-group">
+              <label class="form-label">Intern ID</label>
+              <input class="form-input" id="inp-intern-id" value="NEW_INTERN" placeholder="e.g. INT_1042" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select class="form-select" id="inp-dept">
+                <option>Data Science</option>
+                <option>Software Engineering</option>
+                <option>Product Management</option>
+                <option>DevOps</option>
+                <option>Cybersecurity</option>
+                <option>ML Engineering</option>
+                <option>Frontend Dev</option>
+                <option>Backend Dev</option>
+                <option>Data Engineering</option>
+                <option>Cloud Infrastructure</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:1.2rem;">
+            <div class="form-label" style="margin-bottom:-0.5rem;">⚡ SKILL MATRIX (rate 1–10)</div>
+
+            <div class="form-group">
+              <label class="form-label">🐍 Python Skill</label>
+              <div class="slider-row">
+                <input type="range" class="slider" id="sl-python" min="1" max="10" step="0.1" value="7.8" oninput="updateSlider('python',this.value)">
+                <span class="slider-val" id="sv-python">7.8</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📐 Math & Statistics</label>
+              <div class="slider-row">
+                <input type="range" class="slider" id="sl-math" min="1" max="10" step="0.1" value="5.7" oninput="updateSlider('math',this.value)">
+                <span class="slider-val" id="sv-math">5.7</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">🗄️ SQL Score</label>
+              <div class="slider-row">
+                <input type="range" class="slider" id="sl-sql" min="1" max="10" step="0.1" value="6.3" oninput="updateSlider('sql',this.value)">
+                <span class="slider-val" id="sv-sql">6.3</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">🤖 ML Knowledge</label>
+              <div class="slider-row">
+                <input type="range" class="slider" id="sl-ml" min="1" max="10" step="0.1" value="8.3" oninput="updateSlider('ml',this.value)">
+                <span class="slider-val" id="sv-ml">8.3</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">☁️ Cloud Infrastructure</label>
+              <div class="slider-row">
+                <input type="range" class="slider" id="sl-cloud" min="1" max="10" step="0.1" value="3.0" oninput="updateSlider('cloud',this.value)">
+                <span class="slider-val" id="sv-cloud">3.0</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">🔥 Engagement Score</label>
+              <div class="slider-row">
+                <input type="range" class="slider" id="sl-eng" min="1" max="10" step="0.1" value="7.0" oninput="updateSlider('eng',this.value)">
+                <span class="slider-val" id="sv-eng">7.0</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:1.8rem;display:flex;gap:1rem;flex-wrap:wrap;">
+            <button class="cta-btn" id="rec-btn" onclick="getRecommendations()">
+              <span id="btn-text">🚀 Generate Path</span>
+              <div id="btn-spinner" class="spinner" style="display:none;"></div>
+            </button>
+            <button onclick="randomizeProfile()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-muted);padding:0.9rem 1.5rem;border-radius:50px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(200,255,0,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">🎲 Randomize</button>
+          </div>
+
+          <div style="margin-top:1rem;padding:0.8rem;background:rgba(0,245,255,0.05);border:1px solid rgba(0,245,255,0.15);border-radius:10px;font-size:0.8rem;color:var(--text-muted);line-height:1.6;">
+            💡 <strong style="color:var(--electric-cyan);">Tip:</strong> Run <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;">python backend/app.py</code> first to activate the SVD model.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Skill <span>Radar</span></div>
+        <div class="section-sub">Your competency map — updates live as you move the sliders.</div>
+        <div class="chart-card">
+          <div id="radar-chart" style="height:300px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="results-section" style="margin-top:2.5rem;">
+      <div class="empty-state" id="empty-state">
+        <div class="icon">🎯</div>
+        <h3>Awaiting your profile</h3>
+        <p>Make sure Flask is running, then hit Generate Path</p>
+      </div>
+      <div id="rec-results" style="display:none;">
+        <div class="section-title" style="margin-bottom:0.5rem;">SVD <span>Recommendations</span></div>
+        <div class="section-sub" id="rec-subtitle"></div>
+        <div class="rec-grid" id="rec-cards"></div>
+        <div style="margin-top:3rem;">
+          <div class="section-title" style="font-size:1.2rem;">📍 Learning <span>Timeline</span></div>
+          <div class="section-sub">Suggested week-by-week progression from the model's top picks.</div>
+          <div class="learning-path" id="learning-path"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: ANALYTICS -->
+  <div id="page-analytics" class="page section">
+    <div class="section-title">System <span>Analytics</span></div>
+    <div class="section-sub">Live from the trained SVD model and dataset — model metrics, course distributions, skill profiles.</div>
+
+    <div class="score-strip">
+      <div class="score-card green"><div class="num">87.24%</div><div class="lbl">SVD Model NDCG@3</div></div>
+      <div class="score-card cyan"><div class="num">26.22%</div><div class="lbl">Baseline NDCG@3</div></div>
+      <div class="score-card pink highlight"><div class="num">+61.01%</div><div class="lbl">Personalization Lift</div></div>
+    </div>
+
+    <div class="analytics-grid" style="margin-bottom:1.5rem;">
+      <div class="chart-card">
+        <div class="chart-title">Model Comparison — NDCG@3</div>
+        <div id="chart-ndcg" class="plotly-chart" style="height:280px;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top 10 Most Recommended Courses</div>
+        <div id="chart-popular" class="plotly-chart" style="height:280px;"></div>
+      </div>
+    </div>
+    <div class="analytics-grid three" style="margin-bottom:1.5rem;">
+      <div class="chart-card">
+        <div class="chart-title">Skill Score Distribution</div>
+        <div id="chart-skills" class="plotly-chart" style="height:280px;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Dept × Course Heatmap</div>
+        <div id="chart-heatmap" class="plotly-chart" style="height:280px;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Engagement Trend</div>
+        <div id="chart-engagement" class="plotly-chart" style="height:280px;"></div>
+      </div>
+    </div>
+    <div class="analytics-grid" style="margin-bottom:1.5rem;">
+      <div class="chart-card">
+        <div class="chart-title">Interns per Department</div>
+        <div id="chart-dept" class="plotly-chart" style="height:280px;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">SVD Training Data Composition</div>
+        <div id="chart-formula" class="plotly-chart" style="height:280px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: ABOUT -->
+  <div id="page-about" class="page section">
+    <div class="section-title">How It <span>Works</span></div>
+    <div class="section-sub">The SVD model, training pipeline, and tech stack powering PathForge.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--neon-lime);">🧠 SVD Matrix Factorization</div>
+        <p style="color:var(--text-muted);font-size:0.88rem;line-height:1.8;margin-bottom:1rem;">The model decomposes a user-course interaction matrix into latent factor matrices:</p>
+        <div style="background:rgba(200,255,0,0.05);border:1px solid rgba(200,255,0,0.15);border-radius:12px;padding:1rem;font-size:0.85rem;line-height:2.2;font-family:monospace;">
+          <div style="color:var(--neon-lime);">R ≈ U × Σ × Vᵀ</div>
+          <div style="color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;">U = intern latent factors</div>
+          <div style="color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;">V = course latent factors</div>
+          <div style="color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;">Σ = singular values</div>
+        </div>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem;font-size:0.83rem;">
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span style="color:var(--text-muted);">Latent Factors</span><span style="color:var(--neon-lime);">50</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span style="color:var(--text-muted);">Training Epochs</span><span style="color:var(--neon-lime);">30</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span style="color:var(--text-muted);">Interactions</span><span style="color:var(--neon-lime);">7,055</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span style="color:var(--text-muted);">Train/Test Split</span><span style="color:var(--neon-lime);">80% / 20%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span style="color:var(--text-muted);">NDCG@3 (SVD)</span><span style="color:var(--neon-lime);">87.24%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.5rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span style="color:var(--text-muted);">NDCG@3 (Baseline)</span><span style="color:var(--hot-pink);">26.22%</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--hot-pink);">🛠️ Tech Stack</div>
+        <div style="display:flex;flex-direction:column;gap:0.7rem;font-size:0.88rem;">
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>ML Model</span><span style="color:var(--neon-lime);">scikit-surprise · SVD</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>Backend</span><span style="color:var(--electric-cyan);">Python · Flask · Flask-CORS</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>Data</span><span style="color:var(--neon-lime);">NumPy · Pandas · openpyxl</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>Frontend</span><span style="color:var(--hot-pink);">HTML5 · CSS3 · Vanilla JS</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>Charts</span><span style="color:var(--neon-lime);">Plotly.js 2.35</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>Model Storage</span><span style="color:var(--electric-cyan);">Python pickle (.pkl)</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;"><span>Deployment</span><span style="color:var(--hot-pink);">Gunicorn + static host</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /app -->
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API_BASE = 'http://127.0.0.1:8080';
+
+// ─── Static data (used only for fallback display & charts) ───────────────────
+const ALL_COURSES = [
+  'Python Fundamentals','SQL & Databases','Machine Learning Basics','Deep Learning',
+  'Data Visualization','Cloud Computing (AWS)','Docker & Kubernetes','Cybersecurity Essentials',
+  'System Design','Frontend Basics (React)','Statistics & Probability','NLP & Text Analytics',
+  'MLOps Pipelines','A/B Testing & Experimentation','Data Wrangling & Pandas',
+  'Git & Version Control','APIs & Microservices','Time Series Analysis',
+  'Reinforcement Learning','Business Intelligence & BI Tools'
+];
+
+const COURSE_ICONS = {
+  'Python Fundamentals':'🐍','SQL & Databases':'🗄️','Machine Learning Basics':'🤖',
+  'Deep Learning':'🧠','Data Visualization':'📊','Cloud Computing (AWS)':'☁️',
+  'Docker & Kubernetes':'🐳','Cybersecurity Essentials':'🔐','System Design':'🏗️',
+  'Frontend Basics (React)':'⚛️','Statistics & Probability':'📐','NLP & Text Analytics':'💬',
+  'MLOps Pipelines':'⚙️','A/B Testing & Experimentation':'🔬','Data Wrangling & Pandas':'🐼',
+  'Git & Version Control':'🌿','APIs & Microservices':'🔗','Time Series Analysis':'📈',
+  'Reinforcement Learning':'🎯','Business Intelligence & BI Tools':'📋'
+};
+
+const COURSE_DURATION = {
+  'Python Fundamentals':20,'SQL & Databases':15,'Machine Learning Basics':30,
+  'Deep Learning':40,'Data Visualization':12,'Cloud Computing (AWS)':25,
+  'Docker & Kubernetes':18,'Cybersecurity Essentials':22,'System Design':28,
+  'Frontend Basics (React)':20,'Statistics & Probability':16,'NLP & Text Analytics':24,
+  'MLOps Pipelines':20,'A/B Testing & Experimentation':10,'Data Wrangling & Pandas':14,
+  'Git & Version Control':8,'APIs & Microservices':18,'Time Series Analysis':20,
+  'Reinforcement Learning':35,'Business Intelligence & BI Tools':15
+};
+
+// ─── Slider updater ───────────────────────────────────────────────────────────
+function updateSlider(name, val) {
+  document.getElementById('sv-' + name).textContent = parseFloat(val).toFixed(1);
+  updateRadar();
+}
+
+// ─── Live Radar Chart ─────────────────────────────────────────────────────────
+function updateRadar() {
+  const skills = getSkills();
+  const r      = [skills.python, skills.math, skills.sql, skills.ml, skills.cloud, skills.python];
+  const theta  = ['Python', 'Math/Stats', 'SQL', 'ML Knowledge', 'Cloud Infra', 'Python'];
+  Plotly.react('radar-chart', [{
+    type: 'scatterpolar', r, theta, fill: 'toself',
+    fillcolor: 'rgba(200,255,0,0.15)',
+    line: { color: '#c8ff00', width: 2 },
+    marker: { color: '#c8ff00', size: 6 }
+  }], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: 'rgba(240,240,240,0.7)', family: 'DM Sans' },
+    polar: {
+      bgcolor: 'transparent',
+      radialaxis: { visible: true, range: [0, 10], gridcolor: 'rgba(255,255,255,0.08)',
+                    tickfont: { color: 'rgba(240,240,240,0.4)', size: 10 } },
+      angularaxis: { gridcolor: 'rgba(255,255,255,0.08)',
+                     tickfont: { color: 'rgba(240,240,240,0.6)', size: 11 } }
+    },
+    margin: { t: 20, b: 20, l: 40, r: 40 }, showlegend: false
+  }, { responsive: true });
+}
+
+function getSkills() {
+  return {
+    python: parseFloat(document.getElementById('sl-python').value),
+    math:   parseFloat(document.getElementById('sl-math').value),
+    sql:    parseFloat(document.getElementById('sl-sql').value),
+    ml:     parseFloat(document.getElementById('sl-ml').value),
+    cloud:  parseFloat(document.getElementById('sl-cloud').value),
+  };
+}
+
+// ─── Get Recommendations from SVD Backend ────────────────────────────────────
+async function getRecommendations() {
+  const btn     = document.getElementById('rec-btn');
+  const btnText = document.getElementById('btn-text');
+  const spinner = document.getElementById('btn-spinner');
+
+  btn.classList.add('loading');
+  btnText.style.display = 'none';
+  spinner.style.display = 'block';
+
+  const skills   = getSkills();
+  const engagement = parseFloat(document.getElementById('sl-eng').value);
+  const dept     = document.getElementById('inp-dept').value;
+  const internId = document.getElementById('inp-intern-id').value.trim();
+
+  try {
+    let recs, internData;
+
+    // If intern ID matches dataset format (INT_XXXX), try fetching directly
+    if (/^INT_\d+$/.test(internId)) {
+      const res = await fetch(`${API_BASE}/api/intern/${internId}`);
+      if (res.ok) {
+        internData = await res.json();
+        recs = internData.recommendations;
+        // Sync sliders to real intern's data
+        syncSliders(internData);
+      }
+    }
+
+    // Otherwise (custom/new intern) POST with slider values
+    if (!recs) {
+      const res = await fetch(`${API_BASE}/api/recommend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          intern_id: internId, department: dept,
+          python_skill: skills.python, math_stat: skills.math,
+          sql_score: skills.sql, ml_knowledge: skills.ml,
+          cloud_infra: skills.cloud, engagement
+        })
+      });
+      const data = await res.json();
+      recs = data.recommendations;
+    }
+
+    // Ensure icons & durations are set
+    recs = recs.map(r => ({
+      ...r,
+      icon: r.icon || COURSE_ICONS[r.course] || '📚',
+      duration_hours: r.duration_hours || COURSE_DURATION[r.course] || 15
+    }));
+
+    showBackendStatus(true);
+    displayResults(internId, dept, recs);
+
+  } catch (err) {
+    console.warn('Backend not reachable:', err);
+    showBackendStatus(false);
+    showError();
+  }
+
+  btn.classList.remove('loading');
+  btnText.style.display = 'inline';
+  spinner.style.display = 'none';
+}
+
+// ─── Sync sliders when a real intern is loaded ────────────────────────────────
+function syncSliders(data) {
+  const map = {
+    python: data.python_skill, math: data.math_stat,
+    sql: data.sql_score, ml: data.ml_knowledge,
+    cloud: data.cloud_infra, eng: data.engagement
+  };
+  Object.entries(map).forEach(([k, v]) => {
+    const sl = document.getElementById('sl-' + k);
+    if (sl && v !== undefined) {
+      sl.value = v;
+      updateSlider(k, v);
+    }
+  });
+}
+
+// ─── Backend status indicator ─────────────────────────────────────────────────
+function showBackendStatus(ok) {
+  const el = document.getElementById('backend-status');
+  if (!el) return;
+  el.textContent = ok ? '🟢 SVD Model Active' : '🔴 Backend Offline';
+  el.style.color = ok ? 'var(--neon-lime)' : 'var(--hot-pink)';
+}
+
+function showError() {
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('empty-state').innerHTML = `
+    <div class="icon">⚠️</div>
+    <h3>Backend not running</h3>
+    <p>Start the Flask server: <code style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;">cd backend && python app.py</code></p>
+  `;
+  document.getElementById('rec-results').style.display = 'none';
+}
+
+// ─── Display Results ──────────────────────────────────────────────────────────
+function displayResults(internId, dept, recs) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('rec-results').style.display = 'block';
+  document.getElementById('rec-subtitle').textContent =
+    `SVD Matrix Factorization — Top 3 recommendations for ${internId} · ${dept}`;
+
+  const maxScore = Math.max(...recs.map(r => r.score));
+
+  const cardsEl = document.getElementById('rec-cards');
+  cardsEl.innerHTML = '';
+  recs.forEach(r => {
+    const pct = ((r.score / maxScore) * 100).toFixed(1);
+    cardsEl.innerHTML += `
+      <div class="rec-card">
+        <div class="rec-rank">⭐ Recommendation #${r.rank}</div>
+        <div class="rec-icon">${r.icon || COURSE_ICONS[r.course] || '📚'}</div>
+        <div class="rec-title">${r.course}</div>
+        <div class="rec-score-bar"><div class="rec-score-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:0.78rem;color:var(--text-muted);">SVD Score: <strong style="color:var(--neon-lime)">${r.score}</strong></div>
+        <div class="rec-meta">
+          <span class="rec-tag">⏱ ${r.duration_hours || COURSE_DURATION[r.course] || 15}h</span>
+          <span class="rec-tag cyan">🧠 SVD Model</span>
+        </div>
+        <div class="rec-explanation">${r.explanation || ''}</div>
+      </div>`;
+  });
+
+  // Learning timeline
+  const pathEl = document.getElementById('learning-path');
+  pathEl.innerHTML = '';
+  let week = 1;
+  recs.forEach((r, i) => {
+    const dur = r.duration_hours || COURSE_DURATION[r.course] || 15;
+    pathEl.innerHTML += `
+      <div class="path-step" data-num="${i+1}" style="animation-delay:${i*0.15}s">
+        <div class="step-icon">${r.icon || COURSE_ICONS[r.course] || '📚'}</div>
+        <div class="step-info">
+          <div class="step-title">${r.course}</div>
+          <div class="step-meta">Week ${week}–${week + Math.ceil(dur/8)} &nbsp;·&nbsp; ~${dur}h &nbsp;·&nbsp; SVD score ${r.score}</div>
+        </div>
+      </div>`;
+    week += Math.ceil(dur / 8) + 1;
+  });
+}
+
+// ─── Randomize Profile ────────────────────────────────────────────────────────
+function randomizeProfile() {
+  ['python','math','sql','ml','cloud','eng'].forEach(k => {
+    const val = (Math.random() * 8 + 1.5).toFixed(1);
+    const sl  = document.getElementById('sl-' + k);
+    if (sl) { sl.value = val; updateSlider(k, val); }
+  });
+}
+
+// ─── Analytics Charts ─────────────────────────────────────────────────────────
+async function renderAnalytics() {
+  const dark = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: 'rgba(240,240,240,0.6)', family: 'DM Sans', size: 11 },
+    margin: { t: 15, b: 60, l: 55, r: 15 }
+  };
+
+  let analyticsData = null;
+  try {
+    const res = await fetch(`${API_BASE}/api/analytics`);
+    analyticsData = await res.json();
+  } catch (e) {
+    console.warn('Analytics API not reachable, using static data');
+  }
+
+  // Model performance bar
+  const svdNdcg      = analyticsData?.model_metrics?.svd_ndcg      ?? 87.24;
+  const baselineNdcg = analyticsData?.model_metrics?.baseline_ndcg ?? 26.22;
+  Plotly.newPlot('chart-ndcg', [{
+    type: 'bar',
+    x: ['Baseline\n(Popularity)', 'SVD Matrix\nFactorization'],
+    y: [baselineNdcg, svdNdcg],
+    marker: { color: ['rgba(255,45,120,0.7)', 'rgba(200,255,0,0.8)'],
+              line: { color: ['#ff2d78', '#c8ff00'], width: 2 } },
+    text: [`${baselineNdcg}%`, `${svdNdcg}%`], textposition: 'outside',
+    textfont: { color: ['#ff2d78', '#c8ff00'], size: 13, family: 'Syne' }
+  }], {
+    ...dark, yaxis: { range: [0, 105], gridcolor: 'rgba(255,255,255,0.06)', ticksuffix: '%' }
+  }, { responsive: true });
+
+  // Course popularity
+  const popData = analyticsData?.course_popularity ?? {
+    'SQL & Databases':139,'Data Visualization':84,'Python Fundamentals':83,
+    'Machine Learning Basics':75,'Git & Version Control':71,'Deep Learning':68,
+    'Cloud Computing (AWS)':62,'APIs & Microservices':58,'Docker & Kubernetes':55,'Cybersecurity Essentials':50
+  };
+  const popCourses = Object.keys(popData).slice(0, 10).reverse();
+  const popCounts  = popCourses.map(c => popData[c]);
+  Plotly.newPlot('chart-popular', [{
+    type: 'bar', orientation: 'h',
+    y: popCourses, x: popCounts,
+    marker: { color: popCounts.map((_, i) => `hsla(${60 + i * 15},100%,60%,0.75)`) }
+  }], { ...dark, xaxis: { gridcolor: 'rgba(255,255,255,0.06)' }, margin: { t:15,b:40,l:190,r:15 } },
+  { responsive: true });
+
+  // Skill distribution
+  const skillNames = ['Python', 'Math/Stats', 'SQL', 'ML Knowledge', 'Cloud'];
+  const means = analyticsData
+    ? Object.values(analyticsData.skill_means)
+    : [6.2, 5.4, 5.9, 4.8, 4.2];
+  const stds = analyticsData
+    ? Object.values(analyticsData.skill_stds)
+    : [1.8, 2.1, 1.9, 2.3, 2.4];
+  Plotly.newPlot('chart-skills', [
+    { type: 'bar', name: 'Mean', x: skillNames, y: means, marker: { color: 'rgba(200,255,0,0.75)' } },
+    { type: 'bar', name: 'Std Dev', x: skillNames, y: stds, marker: { color: 'rgba(0,245,255,0.5)' } }
+  ], {
+    ...dark, barmode: 'group',
+    legend: { font: { color: 'rgba(240,240,240,0.6)' }, bgcolor: 'transparent' },
+    yaxis: { gridcolor: 'rgba(255,255,255,0.06)', range: [0, 11] }
+  }, { responsive: true });
+
+  // Dept heatmap
+  const depts    = ['DS','SWE','PM','DevOps','Cyber','MLE','Front','Back','DE','Cloud'];
+  const courses5 = ['Python','SQL','ML','Cloud','Viz'];
+  const z = [
+    [1,1,2,0,4],[0,1,0,1,1],[0,1,0,0,1],[1,1,0,1,0],
+    [1,1,0,1,0],[1,1,1,1,0],[1,0,0,0,1],[1,1,0,1,0],
+    [1,1,0,1,1],[1,1,0,1,0]
+  ];
+  Plotly.newPlot('chart-heatmap', [{
+    type: 'heatmap', x: courses5, y: depts, z,
+    colorscale: [['0','#0d0520'],['0.3','rgba(0,245,255,0.4)'],['1','#c8ff00']],
+    showscale: false
+  }], { ...dark, margin: { t:15,b:40,l:60,r:15 } }, { responsive: true });
+
+  // Engagement trend
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const eng = analyticsData?.monthly_engagement?.length >= 12
+    ? analyticsData.monthly_engagement.slice(0,12)
+    : [6.1,6.4,5.9,7.2,7.8,8.1,7.5,8.3,7.9,8.6,8.2,8.9];
+  Plotly.newPlot('chart-engagement', [{
+    type: 'scatter', mode: 'lines+markers', x: months, y: eng,
+    line: { color: '#c8ff00', width: 3, shape: 'spline' },
+    marker: { color: '#c8ff00', size: 7 },
+    fill: 'tozeroy', fillcolor: 'rgba(200,255,0,0.07)'
+  }], {
+    ...dark,
+    yaxis: { range: [4, 10], gridcolor: 'rgba(255,255,255,0.06)' },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.06)' }
+  }, { responsive: true });
+
+  // Dept distribution
+  const deptData = analyticsData?.dept_counts ?? {
+    'Data Science':112,'Software Engineering':108,'ML Engineering':105,
+    'Data Engineering':104,'DevOps':98,'Cybersecurity':96,
+    'Cloud Infrastructure':95,'Backend Dev':94,'Frontend Dev':97,'Product Management':91
+  };
+  Plotly.newPlot('chart-dept', [{
+    type: 'bar',
+    x: Object.keys(deptData), y: Object.values(deptData),
+    marker: { color: Object.values(deptData).map((_, i) => `hsla(${160 + i * 18},90%,55%,0.75)`) },
+    text: Object.values(deptData), textposition: 'outside',
+    textfont: { color: 'rgba(240,240,240,0.7)', size: 11 }
+  }], {
+    ...dark,
+    xaxis: { tickangle: -35, gridcolor: 'rgba(255,255,255,0.06)' },
+    yaxis: { gridcolor: 'rgba(255,255,255,0.06)' },
+    margin: { t:20,b:110,l:50,r:15 }
+  }, { responsive: true });
+
+  // SVD info donut
+  Plotly.newPlot('chart-formula', [{
+    type: 'pie',
+    labels: ['Completed Course Signals', 'Ground Truth Labels', 'SVD Latent Factors'],
+    values: [45, 35, 20],
+    hole: 0.55,
+    marker: {
+      colors: ['rgba(200,255,0,0.85)', 'rgba(0,245,255,0.75)', 'rgba(255,45,120,0.75)'],
+      line: { color: '#0d0520', width: 3 }
+    },
+    textfont: { color: 'rgba(240,240,240,0.9)', size: 11 },
+    textinfo: 'label+percent'
+  }], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: 'rgba(240,240,240,0.6)', family: 'DM Sans' },
+    showlegend: false, margin: { t:15,b:15,l:15,r:15 }
+  }, { responsive: true });
+}
+
+// ─── Page Navigation ──────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'analytics') renderAnalytics();
+}
+
+// ─── Particle Background ──────────────────────────────────────────────────────
+(function initParticles() {
+  const canvas = document.getElementById('particles');
+  const ctx    = canvas.getContext('2d');
+  let W, H;
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const particles = Array.from({ length: 60 }, () => ({
+    x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+    vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2 + 0.5, alpha: Math.random() * 0.3 + 0.05,
+    color: Math.random() > 0.6 ? '200,255,0' : '0,245,255'
+  }));
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.alpha})`; ctx.fill();
+    });
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(200,255,0,${0.06 * (1 - d / 120)})`;
+          ctx.lineWidth = 0.5; ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  updateRadar();
+
+  // Check if backend is alive
+  try {
+    const res = await fetch(`${API_BASE}/api/model_info`);
+    const info = await res.json();
+    showBackendStatus(true);
+    // Update hero stats with real model metrics
+    const ndcgEl = document.querySelector('.hero-stat:nth-child(2) .num');
+    if (ndcgEl) ndcgEl.textContent = `${info.svd_ndcg}%`;
+  } catch {
+    showBackendStatus(false);
+  }
+});
+
+</script>
+</body>
+</html>

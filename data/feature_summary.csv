@@ -1,0 +1,28 @@
+Unnamed: 0,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+Feature,Min,Max,Mean,Std Dev,Median,Notes
+gpa,2.1,4,3.281,0.391,3.31,Scale 2.0–4.0
+python_skill_score,0,10,5.8,2.211,5.8,Self-assessed 0–10
+math_stat_score,0,10,6.002,1.907,6,Self-assessed 0–10
+sql_score,0,10,4.789,2.251,4.75,Self-assessed 0–10
+ml_knowledge_score,0,10,4.308,2.45,4.2,Pre-assessment 0–10
+cloud_infra_score,0,9.9,3.607,1.983,3.6,Pre-assessment 0–10
+hours_per_week,2,17.3,7.994,2.87,8,Available learning hrs
+avg_quiz_score_pct,30,100,68.72,13.82,68.4,Module quiz avg (%)
+session_completion_rate,0.19,0.99,0.712,0.164,0.74,"0=none, 1=all completed"
+engagement_score,3.1,8.8,6.096,0.85,6.1,Composite: completion+quiz+hrs
+satisfaction_rating,2,5,4.16,0.682,4.2,Likert 1–5
+days_since_joining,14,179,94.101,47.775,96,Program tenure (days)
+courses_completed_count,0,8,4.058,2.576,4,Count of finished modules
+,,,,,,
+,,,,,,
+Dropout Risk Distribution,,,Top Recommended Courses (Slot 1),,,
+Medium,548,,SQL & Databases,139,,
+Low,403,,Data Visualization,84,,
+High,49,,Python Fundamentals,83,,
+,,,APIs & Microservices,73,,
+,,,Cloud Computing (AWS),68,,
+,,,Docker & Kubernetes,65,,
+,,,Git & Version Control,62,,
+,,,System Design,58,,
+,,,Data Wrangling & Pandas,50,,
+,,,MLOps Pipelines,48,,

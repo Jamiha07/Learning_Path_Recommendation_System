@@ -1,0 +1,15 @@
+Unnamed: 0,Unnamed: 1
+Scoring Formula (Ground Truth),"score = dept_affinity × 0.6 + skill_gap_bonus × 0.3 + noise × 0.1   |   noise = Uniform(−0.01, +0.01)"
+Why noise=±0.01 not ±0.1,"Original ±0.1 noise caused 85.6% of rank-1 labels to be randomly flipped, capping engine ceiling at 72%. Reduced to ±0.01 → ceiling now 84%+. Realistic: real datasets have some label noise but not 85%."
+Model Type,Collaborative Filtering via Matrix Factorization (SVD/NMF). Intern × Course interaction matrix.
+Input Features (User),"department, education_background, skill scores (python/math/sql/ml/cloud), gpa, engagement_score, completion_rate"
+Input Features (Item),"Course name, dept affinity weight, skill domain (python/sql/ml/cloud/math)"
+Target Variable,"recommended_course_1/2/3 — top-3 courses not yet completed, ranked by scoring formula"
+Matrix Construction,"Rows=intern_id, Columns=all_courses (20). Values=1 if completed, 0 if not."
+Cold Start Handling,0-course interns fall back to content-based filtering using dept affinity + skill scores.
+Evaluation Metric,NDCG@3 — measures both hit rate and rank quality. Baseline (popularity) = ~27%. Engine ceiling = ~84%.
+Train/Test Split,80/20 stratified by department.
+Tricky Edge Cases,"1) High ML skill DevOps interns → MLOps override
+2) Fresh high-engagement interns → Python+SQL fundamentals
+3) Completed courses excluded from recommendations"
+Feature Engineering Ideas,Skill gap score per course | Learning velocity = courses/days_since_joining | Engagement × dept_affinity interaction

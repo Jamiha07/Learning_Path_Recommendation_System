@@ -1,0 +1,32 @@
+{
+  "all_courses": [
+    "Python Fundamentals",
+    "SQL & Databases",
+    "Machine Learning Basics",
+    "Deep Learning",
+    "Data Visualization",
+    "Cloud Computing (AWS)",
+    "Docker & Kubernetes",
+    "Cybersecurity Essentials",
+    "System Design",
+    "Frontend Basics (React)",
+    "Statistics & Probability",
+    "NLP & Text Analytics",
+    "MLOps Pipelines",
+    "A/B Testing & Experimentation",
+    "Data Wrangling & Pandas",
+    "Git & Version Control",
+    "APIs & Microservices",
+    "Time Series Analysis",
+    "Reinforcement Learning",
+    "Business Intelligence & BI Tools"
+  ],
+  "rmse": 1.3648,
+  "mae": 1.2056,
+  "svd_ndcg": 87.24,
+  "baseline_ndcg": 26.22,
+  "lift": 61.01,
+  "n_interactions": 7055,
+  "n_factors": 50,
+  "n_epochs": 30
+}
