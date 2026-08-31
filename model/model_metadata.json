@@ -23,10 +23,11 @@
   ],
   "rmse": 1.3648,
   "mae": 1.2056,
-  "svd_ndcg": 87.24,
-  "baseline_ndcg": 26.22,
-  "lift": 61.01,
+  "svd_ndcg": 71.94,
+  "baseline_ndcg": 25.17,
+  "lift": 46.77,
   "n_interactions": 7055,
   "n_factors": 50,
-  "n_epochs": 30
+  "n_epochs": 30,
+  "eval_note": "RMSE/MAE/NDCG@3 computed on interns held out entirely from training (true generalization test), unlike the original evaluation which tested the all-data model against itself."
 }

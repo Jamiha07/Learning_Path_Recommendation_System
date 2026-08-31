@@ -9,15 +9,28 @@ CORS(app)
 
 # ── Load trained SVD model ────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, '..', 'model', 'svd_model.pkl')
-META_PATH  = os.path.join(BASE_DIR, '..', 'model', 'model_metadata.json')
-DATA_PATH  = os.path.join(BASE_DIR, '..', 'data', 'intern_learning_path_dataset_v2.xlsx')
+MODEL_PATH         = os.path.join(BASE_DIR, '..', 'model', 'svd_model.pkl')
+META_PATH          = os.path.join(BASE_DIR, '..', 'model', 'model_metadata.json')
+CONTENT_MODEL_PATH = os.path.join(BASE_DIR, '..', 'model', 'content_model.pkl')
+CONTENT_META_PATH  = os.path.join(BASE_DIR, '..', 'model', 'content_model_metadata.json')
+DATA_PATH          = os.path.join(BASE_DIR, '..', 'data', 'intern_learning_path_dataset_v2.xlsx')
 
 with open(MODEL_PATH, 'rb') as f:
     svd_model = pickle.load(f)
 
 with open(META_PATH, 'r') as f:
     metadata = json.load(f)
+
+# Content-based model: trained on intern FEATURES (skills, dept, engagement)
+# rather than intern IDs, so it can score any profile, known or brand new.
+with open(CONTENT_MODEL_PATH, 'rb') as f:
+    content_model = pickle.load(f)
+
+with open(CONTENT_META_PATH, 'r') as f:
+    content_metadata = json.load(f)
+
+CONTENT_FEATURE_COLUMNS = content_metadata['feature_columns']
+CONTENT_DEPARTMENTS     = content_metadata['departments']
 
 df = pd.read_excel(DATA_PATH, sheet_name='Intern Dataset')
 
@@ -50,89 +63,32 @@ COURSE_DURATION = {
     'Reinforcement Learning':35,'Business Intelligence & BI Tools':15
 }
 
-# ── Department → relevant courses ────────────────────────────
-DEPT_COURSES = {
-    'Data Science':        ['Python Fundamentals','Machine Learning Basics','Deep Learning',
-                            'Statistics & Probability','Data Visualization','NLP & Text Analytics',
-                            'Data Wrangling & Pandas','Time Series Analysis','MLOps Pipelines',
-                            'A/B Testing & Experimentation'],
-    'Software Engineering':['Python Fundamentals','System Design','APIs & Microservices',
-                            'Docker & Kubernetes','Git & Version Control','Frontend Basics (React)',
-                            'SQL & Databases','Cloud Computing (AWS)'],
-    'Cloud & DevOps':      ['Cloud Computing (AWS)','Docker & Kubernetes','MLOps Pipelines',
-                            'APIs & Microservices','System Design','Git & Version Control',
-                            'Cybersecurity Essentials'],
-    'Cybersecurity':       ['Cybersecurity Essentials','System Design','Cloud Computing (AWS)',
-                            'APIs & Microservices','SQL & Databases','Docker & Kubernetes'],
-    'Data Engineering':    ['SQL & Databases','Data Wrangling & Pandas','Cloud Computing (AWS)',
-                            'Python Fundamentals','APIs & Microservices','MLOps Pipelines',
-                            'Time Series Analysis'],
-    'Business Analytics':  ['Business Intelligence & BI Tools','Data Visualization','SQL & Databases',
-                            'Statistics & Probability','A/B Testing & Experimentation',
-                            'Data Wrangling & Pandas'],
-    'Machine Learning':    ['Machine Learning Basics','Deep Learning','MLOps Pipelines',
-                            'NLP & Text Analytics','Reinforcement Learning','Statistics & Probability',
-                            'Time Series Analysis','Python Fundamentals'],
-    'Frontend':            ['Frontend Basics (React)','APIs & Microservices','Git & Version Control',
-                            'System Design','Docker & Kubernetes'],
-    'Research':            ['Statistics & Probability','Machine Learning Basics','Deep Learning',
-                            'Reinforcement Learning','NLP & Text Analytics','Time Series Analysis'],
-    'Product':             ['A/B Testing & Experimentation','Business Intelligence & BI Tools',
-                            'Data Visualization','SQL & Databases','APIs & Microservices'],
-}
-
-# ── Skill → courses it boosts ─────────────────────────────────
-SKILL_COURSES = {
-    'python': ['Python Fundamentals','Machine Learning Basics','Deep Learning',
-               'Data Wrangling & Pandas','MLOps Pipelines','NLP & Text Analytics',
-               'Time Series Analysis','Reinforcement Learning'],
-    'math':   ['Statistics & Probability','Machine Learning Basics','Deep Learning',
-               'Time Series Analysis','Reinforcement Learning','A/B Testing & Experimentation'],
-    'sql':    ['SQL & Databases','Data Wrangling & Pandas',
-               'Business Intelligence & BI Tools','Data Visualization'],
-    'ml':     ['Machine Learning Basics','Deep Learning','MLOps Pipelines',
-               'NLP & Text Analytics','Reinforcement Learning','Time Series Analysis'],
-    'cloud':  ['Cloud Computing (AWS)','Docker & Kubernetes','MLOps Pipelines',
-               'APIs & Microservices','Cybersecurity Essentials'],
-}
-
 print(f"✅ SVD model loaded | NDCG@3: {metadata['svd_ndcg']}%")
+print(f"✅ Content model loaded | held-out NDCG@3: {content_metadata['ndcg_at_3']}%")
 
 
-# ── Skill-based scoring for unknown interns ───────────────────
-def skill_based_score(course, dept, python_skill, math_stat,
-                      sql_score, ml_knowledge, cloud_infra, engagement):
-    """
-    Pure skill+dept scoring used when the user is NOT in the training set.
-    Scores range 1-10 so they're on the same scale as SVD predictions.
-    """
-    dept_relevant = set(DEPT_COURSES.get(dept, []))
-    skill_map = {
-        'python': python_skill,
-        'math':   math_stat,
-        'sql':    sql_score,
-        'ml':     ml_knowledge,
-        'cloud':  cloud_infra,
+# ── Content-based scoring for interns NOT in the SVD training set ─────
+# Unlike SVD (one latent vector per known intern_id), this model was trained
+# on the actual feature values (skills, department, engagement), so it can
+# score a profile it has never seen before — it's a real prediction, not a
+# hand-picked formula.
+def content_based_score(course, dept, python_skill, math_stat,
+                        sql_score, ml_knowledge, cloud_infra, engagement):
+    row = {
+        'python_skill_score': python_skill,
+        'math_stat_score':    math_stat,
+        'sql_score':          sql_score,
+        'ml_knowledge_score': ml_knowledge,
+        'cloud_infra_score':  cloud_infra,
+        'engagement_score':   engagement,
     }
+    for d in CONTENT_DEPARTMENTS:
+        row[f'dept_{d}'] = 1.0 if dept == d else 0.0
+    for c in ALL_COURSES:
+        row[f'course_{c}'] = 1.0 if course == c else 0.0
 
-    # 1. Department affinity (0 or 1)
-    dept_score = 1.0 if course in dept_relevant else 0.0
-
-    # 2. Skill gap bonus — low skill in a relevant area = higher priority
-    gap_total  = 0.0
-    gap_count  = 0
-    for skill_key, skill_val in skill_map.items():
-        if course in SKILL_COURSES.get(skill_key, []):
-            gap_total += (10.0 - skill_val) / 9.0
-            gap_count += 1
-    gap_bonus = (gap_total / gap_count) if gap_count > 0 else 0.0
-
-    # 3. Engagement modifier (-0.1 to +0.1)
-    eng_mod = (engagement - 5.0) * 0.02
-
-    # Weighted blend → scale to 1-10
-    raw   = 0.5 * dept_score + 0.4 * gap_bonus + 0.1 * (engagement / 10.0)
-    score = 1.0 + raw * 9.0 + eng_mod
+    features = pd.DataFrame([row]).reindex(columns=CONTENT_FEATURE_COLUMNS, fill_value=0.0)
+    score = float(content_model.predict(features)[0])
     return round(score, 4)
 
 
@@ -144,6 +100,8 @@ def svd_predict_new(intern_id, dept, python_skill, math_stat,
     is_known = intern_id in KNOWN_USERS
     print(f"   is_known_user: {is_known}")
 
+    model_used = 'SVD Matrix Factorization' if is_known else 'Content-Based (Random Forest)'
+
     scores = []
     for c in ALL_COURSES:
         if c in completed_courses:
@@ -154,8 +112,8 @@ def svd_predict_new(intern_id, dept, python_skill, math_stat,
             pred  = svd_model.predict(intern_id, c)
             score = round(pred.est, 4)
         else:
-            # Unknown intern — use skill+dept scoring
-            score = skill_based_score(
+            # Unknown/new intern — real prediction from the content-based model
+            score = content_based_score(
                 c, dept, python_skill, math_stat,
                 sql_score, ml_knowledge, cloud_infra, engagement
             )
@@ -176,7 +134,7 @@ def svd_predict_new(intern_id, dept, python_skill, math_stat,
             f"Dept: {dept} | "
             f"Engagement: {engagement}/10"
         )
-    return top3
+    return top3, model_used
 
 
 # ── Routes ────────────────────────────────────────────────────
@@ -198,7 +156,7 @@ def recommend():
           f"math={math_stat} sql={sql_score} ml={ml_knowledge} "
           f"cloud={cloud_infra} eng={engagement}")
 
-    recs = svd_predict_new(
+    recs, model_used = svd_predict_new(
         intern_id, dept, python_skill, math_stat,
         sql_score, ml_knowledge, cloud_infra,
         engagement, completed
@@ -209,7 +167,7 @@ def recommend():
     return jsonify({
         'intern_id':       intern_id,
         'department':      dept,
-        'model':           'SVD Matrix Factorization',
+        'model':           model_used,
         'recommendations': recs
     })
 
@@ -308,7 +266,9 @@ def courses():
 
 @app.route('/api/model_info', methods=['GET'])
 def model_info():
-    return jsonify(metadata)
+    # Keep original flat keys (svd_ndcg, rmse, ...) so the existing frontend
+    # keeps working, and add the content model's metrics alongside them.
+    return jsonify({**metadata, 'content_model': content_metadata})
 
 
 if __name__ == '__main__':

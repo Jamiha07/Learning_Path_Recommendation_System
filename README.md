@@ -6,7 +6,7 @@
 ![Flask](https://img.shields.io/badge/Flask-REST%20API-black?style=flat-square&logo=flask)
 ![scikit-surprise](https://img.shields.io/badge/scikit--surprise-SVD-orange?style=flat-square)
 ![Plotly](https://img.shields.io/badge/Plotly.js-Charts-3F4F75?style=flat-square&logo=plotly)
-![NDCG](https://img.shields.io/badge/NDCG%403-87.24%25-brightgreen?style=flat-square)
+![NDCG](https://img.shields.io/badge/NDCG%403-71.94%25-brightgreen?style=flat-square)
  
 ---
 
@@ -23,7 +23,7 @@ PathForge recommends the **top 3 personalized learning courses** for each intern
  
 The system handles two types of users:
 - **Known Interns** (`INT_1000`–`INT_1999`): Gets predictions directly from the SVD model using learned latent factors.
-- **New / Custom Interns**: Falls back to a skill-gap + department affinity scoring formula so anyone can still get a meaningful recommendation.
+- **New / Custom Interns**: Gets predictions from a second, content-based model (Random Forest) trained on skill scores, department, and engagement — so new users get a genuine model prediction, not a hardcoded formula, even though SVD itself has no latent vector for someone it never trained on.
 Built as part of an ML internship project at **Internee.pk**.
  
 ---
@@ -39,27 +39,30 @@ U  = intern latent factors   (1000 interns × 50 factors)
 Vᵀ = course latent factors   (50 factors × 20 courses)
 ```
  
-For interns not in the training set, a rule-based fallback scores courses using department relevance, skill gaps, and engagement:
+For interns not in the SVD training set, a second **content-based model** (`RandomForestRegressor`, scikit-learn) predicts a score directly from their skill values, department, and engagement — a real learned prediction rather than a hand-tuned formula, so it generalizes to any profile:
  
 ```
-Score = 0.5 × dept_affinity + 0.4 × gap_bonus + 0.1 × (engagement / 10)
-gap_bonus = (10 - skill_value) / 9.0   ← low skill = higher priority
+score = RandomForest(python_skill, math_stat, sql_score,
+                      ml_knowledge, cloud_infra, engagement,
+                      department, course)
 ```
  
-The Flask backend loads the pre-trained `.pkl` model at startup and serves predictions via a REST API. The frontend calls this API, renders the results, and falls back gracefully if the backend is offline.
+The Flask backend loads both pre-trained `.pkl` models at startup and routes each request to whichever one applies. The frontend calls this API, renders the results, and falls back gracefully if the backend is offline.
  
 ### 📈 Model Performance
  
-| Metric | Value |
-|---|---|
-| NDCG@3 — SVD Model | **87.24%** |
-| NDCG@3 — Baseline (Popularity) | 26.22% |
-| Lift over Baseline | **+61.01%** |
-| RMSE | 1.3648 |
-| MAE | 1.2056 |
-| Training Interactions | 7,055 |
-| Latent Factors | 50 |
-| Training Epochs | 30 |
+All metrics below are measured on interns held out entirely from training — a true generalization test, not accuracy on data the model already saw.
+ 
+| Metric | SVD (known interns) | Content Model (new/unseen interns) |
+|---|---|---|
+| NDCG@3 | **71.94%** | 63.28% |
+| NDCG@3 — Baseline (Popularity) | 25.17% | — |
+| Lift over Baseline | **+46.77%** | +37.06% |
+| RMSE | 1.3648 | 2.2084 |
+| MAE | 1.2056 | 1.8504 |
+| Training Interactions | 7,055 | 10,055 (incl. negative samples) |
+| Latent Factors / Trees | 50 factors | 300 trees |
+| Training Epochs / Max Depth | 30 epochs | depth 12 |
  
 ---
  
@@ -149,7 +152,7 @@ gunicorn app:app --bind 0.0.0.0:$PORT
  
 ## 📓 Notebook
  
-`notebook/Learning_Path_Recommendation_System.ipynb` contains the full ML pipeline — data exploration, interaction matrix construction, SVD training with `scikit-surprise`, NDCG@3 evaluation against the popularity baseline, and model export to `model/svd_model.pkl`.
+`notebook/Learning_Path_Recommendation_System.ipynb` contains the full ML pipeline — data exploration, interaction matrix construction, SVD training with `scikit-surprise`, honest held-out NDCG@3 evaluation against the popularity baseline, a second content-based model (Random Forest) for interns outside the SVD training set, and export of both models to `model/`.
  
 ---
  
